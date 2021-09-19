@@ -9,17 +9,14 @@ def optimal_returns(returns1, returns2, start_date, end_date):
     for j in range(1, 10):
 
       returns_df.loc[str(i)+str(j), 'returns'] = sizing_returns(
-        returns1, returns2, i, j, start_date, end_date)
+        returns1, returns2, i/100, j/100, start_date, end_date)
 
   returns_df['returns'] = pd.to_numeric(returns_df['returns'])
 
   return returns_df
 
 
-def sizing_returns(returns1, returns2, i, j, start_date, end_date):
-
-  i_temp = i/100
-  j_temp = j/100
+def sizing_returns(returns1, returns2, i_temp, j_temp, start_date, end_date):
 
   returns1['temp'] = 1 + i_temp*(returns1['profit'] - 1)
   returns2['temp'] = 1 + j_temp*(returns2['profit'] - 1)
