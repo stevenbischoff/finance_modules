@@ -36,11 +36,11 @@ def date_return(returns1, returns2, i_temp, j_temp, date, bank):
 
   if len(returns1_date) > 0:
     returns1_date_total = i_temp*len(returns1_date)*(returns1_date.mean() - 1)
-  elif len(returns2_date) > 0:
-    returns1_date_total = 0
-    returns2_date_total = j_temp*len(returns2_date)*(returns2_date.mean() - 1)
   else:
     returns1_date_total = 0
+  if len(returns2_date) > 0:
+    returns2_date_total = j_temp*len(returns2_date)*(returns2_date.mean() - 1)
+  else:
     returns2_date_total = 0
 
   bank *= 1 + returns1_date_total + returns2_date_total
