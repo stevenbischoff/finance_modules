@@ -1,59 +1,62 @@
 import pandas as pd
+import numpy as np
+import itertools
 import datetime as dt
 import sys
 
-def optimal_returns(returns1, returns2, start_date, end_date):
+def optimal_returns(returns_list, start_date, end_date):
 
-  returns_df = pd.DataFrame(columns=['returns'])
+  returns_df = pd.DataFrame(columns=['pct', 'returns'])
 
-  for i in range(1, 10):
-    for j in range(1, 10):
+  size_list = np.linspace(0, 0.1, 11)
 
-      returns_df.loc[str(i)+str(j), 'returns'] = sizing_returns(
-        returns1, returns2, i/100, j/100, start_date, end_date)
+  for prod in itertools.product(size_list, repeat=len(returns_list)):
+    prod_returns = sizing_returns(returns_list, start_date, end_date, prod)
+    returns_df = returns_df.append(pd.Series(
+      {'pct':prod, 'returns': prod_returns}), ignore_index=True)
 
   returns_df['returns'] = pd.to_numeric(returns_df['returns'])
 
   return returns_df
 
 
-def sizing_returns(returns1, returns2, i_temp, j_temp, start_date, end_date):
+def sizing_returns(returns_list, start_date, end_date, prod):
 
   delta = dt.timedelta(days=1)
   bank_series = pd.Series()
 
   while start_date <= end_date:
-    date_return(returns1, returns2, i_temp, j_temp, start_date, bank_series)    
+    date_return(returns_list, start_date, bank_series, prod)    
     start_date += delta
 
   bank = bank_series.product()
 
   return bank
 
+def date_return(returns_list, date, bank_series, prod):
 
-def date_return(returns1, returns2, i_temp, j_temp, date, bank_series):
+  date_token, date_return = 0, 1
+  for i in range(len(returns_list)):
+    buy_pct = prod[i]
+    return_series = returns_list[i]
+    returns_date = return_series.loc[return_series['Date'] == date, 'profit']
 
-  returns1_date = returns1.loc[returns1['Date'] == date, 'profit']
-  returns2_date = returns2.loc[returns2['Date'] == date, 'profit']
+    n_open = len(returns_date)
+    if n_open == 0:
+      continue
+    date_token = 1
 
-  n_open1, n_open2 = len(returns1_date), len(returns2_date)
-
-  if n_open1 == 0 and n_open2 == 0:
+    returns_date_total = buy_pct*n_open*(returns_date.mean() - 1)
+    date_return += returns_date_total
+    
+  if date_token == 0:
     return
 
-  if len(returns1_date) > 0:
-    returns1_date_total = i_temp*len(returns1_date)*(returns1_date.mean() - 1)
-  else:
-    returns1_date_total = 0
-  if len(returns2_date) > 0:
-    returns2_date_total = j_temp*len(returns2_date)*(returns2_date.mean() - 1)
-  else:
-    returns2_date_total = 0
-
-  bank_series[date] = 1 + returns1_date_total + returns2_date_total
+  bank_series[date] = date_return
   
 
-def max_drawdown(cumulative_bank_series):
+def max_drawdown(bank_series):
+  cumulative_bank_series = bank_series.cumprod()
   drawdown_series = cumulative_bank_series/cumulative_bank_series.cummax() - 1
   max_drawdown = drawdown_series.min()
   
