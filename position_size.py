@@ -4,16 +4,23 @@ import itertools
 import datetime as dt
 import sys
 
-def optimal_returns(returns_list, start_date, end_date):
+def optimal_returns(returns_list, max_drawdown, max_position_size, start_date, end_date):
 
-  returns_df = pd.DataFrame(columns=['pct', 'returns'])
+  returns_df = pd.DataFrame(columns=['pct', 'returns', 'largest drawdown'])
 
-  size_list = np.linspace(0, 0.1, 11)
+  size_list = np.linspace(0.0, max_position_size, int(max_position_size*100 + 1))
 
   for prod in itertools.product(size_list, repeat=len(returns_list)):
     prod_returns = sizing_returns(returns_list, start_date, end_date, prod)
-    returns_df = returns_df.append(pd.Series(
-      {'pct':prod, 'returns': prod_returns}), ignore_index=True)
+    
+    largest_drawdown = calculate_largest_drawdown(prod_returns)
+    if abs(largest_drawdown) > abs(max_drawdown):
+      continue
+    
+    bank = prod_returns.product()
+    returns_df = returns_df.append(
+      pd.Series({'pct':prod, 'returns': bank, 'largest drawdown':largest_drawdown}),
+      ignore_index=True)
 
   returns_df['returns'] = pd.to_numeric(returns_df['returns'])
 
@@ -29,9 +36,7 @@ def sizing_returns(returns_list, start_date, end_date, prod):
     date_return(returns_list, start_date, bank_series, prod)    
     start_date += delta
 
-  bank = bank_series.product()
-
-  return bank
+  return bank_series
 
 def date_return(returns_list, date, bank_series, prod):
 
@@ -55,9 +60,9 @@ def date_return(returns_list, date, bank_series, prod):
   bank_series[date] = date_return
   
 
-def max_drawdown(bank_series):
+def calculate_largest_drawdown(bank_series):
   cumulative_bank_series = bank_series.cumprod()
   drawdown_series = cumulative_bank_series/cumulative_bank_series.cummax() - 1
-  max_drawdown = drawdown_series.min()
+  largest_drawdown = drawdown_series.min()
   
-  return max_drawdown
+  return largest_drawdown
