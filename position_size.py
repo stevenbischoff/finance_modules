@@ -5,6 +5,14 @@ import datetime as dt
 import sys
 
 def optimal_returns(returns_list, max_drawdown, max_position_size, start_date, end_date):
+  """
+  Parameters
+    returns_list : iterable
+    max_drawdown : float
+    max_position_size : float
+    start_date : datetime.datetime
+    end_date : datetime.datetime
+  """
 
   returns_df = pd.DataFrame(columns=['pct', 'returns', 'largest drawdown'])
 
@@ -28,6 +36,13 @@ def optimal_returns(returns_list, max_drawdown, max_position_size, start_date, e
 
 
 def sizing_returns(returns_list, start_date, end_date, prod):
+  """
+  Parameters
+    returns_list : iterable
+    start_date : datetime.datetime
+    end_date : datetime.datetime
+    prod : iterable
+  """
 
   delta = dt.timedelta(days=1)
   bank_series = pd.Series()
@@ -38,8 +53,15 @@ def sizing_returns(returns_list, start_date, end_date, prod):
 
   return bank_series
 
-def date_return(returns_list, date, bank_series, prod):
 
+def date_return(returns_list, date, bank_series, prod):
+  """
+  Parameters
+    returns_list : iterable
+    date : datetime.datetime
+    bank_series : Pandas series
+    prod : iterable
+  """
   date_token, date_return = 0, 1
   for i in range(len(returns_list)):
     buy_pct = prod[i]
@@ -61,6 +83,11 @@ def date_return(returns_list, date, bank_series, prod):
   
 
 def calculate_largest_drawdown(bank_series):
+  """
+  Parameters
+    bank_series : Pandas series
+      Returns is 1 + (period pct return). E.g. a 2 pct return is represented as 1.02.
+  """
   cumulative_bank_series = bank_series.cumprod()
   drawdown_series = cumulative_bank_series/cumulative_bank_series.cummax() - 1
   largest_drawdown = drawdown_series.min()
