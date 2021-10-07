@@ -12,6 +12,8 @@ def optimal_returns(returns_list, max_drawdown, max_position_size, start_date, e
     max_position_size : float
     start_date : datetime.datetime
     end_date : datetime.datetime
+  Calculates returns for an arbitrary number of strategies that each have an arbitrary number
+  of actions in a particular time period, subject to a maximum drawdown constraint 
   """
 
   returns_df = pd.DataFrame(columns=['pct', 'returns', 'largest drawdown'])
